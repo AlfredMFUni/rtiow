@@ -1,5 +1,6 @@
 pub mod vec3;
 
+
 use image::ImageBuffer;
 
 pub fn render(img_buf: &mut ImageBuffer<image::Rgb<u8>, Vec<u8>>){
