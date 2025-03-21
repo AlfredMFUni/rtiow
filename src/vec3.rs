@@ -1,6 +1,6 @@
 pub mod color;
 
-use std::ops::{Add, AddAssign, Mul, Neg, Sub, Div};
+use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
 #[derive(Copy, Clone, PartialEq, Debug )]
 pub struct Vec3 {
@@ -126,15 +126,9 @@ impl Div<f64> for Vec3 {
     type Output = Self;
 
     fn div(self, rhs: f64) -> Self::Output {
-        Vec3 {
-            x: self.x / rhs,
-            y: self.y / rhs,
-            z: self.z / rhs,
-        }
+        (1.0 / rhs) * self
     }
 }
-
-
 
 #[cfg(test)]
 mod test {
