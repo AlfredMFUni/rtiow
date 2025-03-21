@@ -1,38 +1,30 @@
 pub mod vec3; //includes the sub-module color 
 pub mod ray;
-
-use std::mem::Discriminant;
+pub mod hittable;
 
 use image::{ImageBuffer, Rgb};
 use vec3::color::Color; 
 use vec3::Vec3;
 use ray::Ray;
-
-fn hit_sphere(center: &Vec3, radius: f64, r: &Ray) -> f64 {
-  let oc = *center - *r.origin();
-  let a = Vec3::dot(r.direction(), r.direction());
-  let b = 2.0 * Vec3::dot(r.direction(), &oc);
-  let c = Vec3::dot(&oc, &oc) - radius * radius;
-  //The quadratic equation a*t*t + b*t + c = 0 has real roots 
-  // iff (-b +\- sqrt(b*b - 4*a*c)) / 2*a has a solution
-  // iff b*b - 4*a*c >= 0 
-  let discriminant = b * b - 4.0 * a * c;
-
-  if discriminant < 0.0 { -1.0 } else { ( b -discriminant.sqrt() ) / (2.0 * a) }
-}
+use hittable::{HitRecord, Hittable, Sphere};
 
 fn ray_color(r: &Ray) -> Color {
-  let t = hit_sphere(&Vec3::new(0.0, 0.0, -1.0), 0.5, r);
-  if t > 0.0 {
-    //Surface normal direction is from center of sphere to hit point
-    let surface_normal = Vec3::unit_vector(&(r.point_at(t) - Vec3::new(0.0, 0.0, -1.0)));
-    //surface_normal has -1 <= x, y, z <= 1 so to get a colour just map
-    //  these values into [0 .. 1] by value -> (value + 1) / 2
-    0.5 * Color::new(surface_normal.x + 1.0, surface_normal.y + 1.0, surface_normal.z + 1.0)
-  } else {
-    let unit_direction = Vec3::unit_vector(r.direction());
-    let a = 0.5 * (unit_direction.y + 1.0); 
-    (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+  let sphere = Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5);
+  let hit_test = sphere.hit(r, 0.0, 10.0);
+
+  match hit_test{
+    Some(hit_record) => {
+      //Surface normal direction is from center of sphere to hit point
+      let surface_normal = Vec3::unit_vector(&(r.point_at(hit_record.t) - Vec3::new(0.0, 0.0, -1.0)));
+      //surface_normal has -1 <= x, y, z <= 1 so to get a colour just map
+      //  these values into [0 .. 1] by value -> (value + 1) / 2
+      0.5 * Color::new(surface_normal.x + 1.0, surface_normal.y + 1.0, surface_normal.z + 1.0)
+    }
+    None => {
+      let unit_direction = Vec3::unit_vector(r.direction());
+      let a = 0.5 * (unit_direction.y + 1.0); 
+      (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+    }
   }
 }
 
