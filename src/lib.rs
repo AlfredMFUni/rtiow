@@ -1,24 +1,28 @@
 pub mod vec3; //includes the sub-module color 
 pub mod ray;
 pub mod hittable;
+pub mod interval;
+
+use core::f64;
+use std::rc::Rc;
 
 use image::{ImageBuffer, Rgb};
+
 use vec3::color::Color; 
 use vec3::Vec3;
 use ray::Ray;
-use hittable::{HitRecord, Hittable, Sphere};
+use hittable::{Hittable, Sphere, HittableList};
+use interval::Interval;
 
-fn ray_color(r: &Ray) -> Color {
-  let sphere = Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5);
-  let hit_test = sphere.hit(r, 0.0, 10.0);
+fn ray_color(r: &Ray, world: &HittableList) -> Color {
+  let hit_test = world.hit(r, Interval::new(0.0, f64::INFINITY));
 
   match hit_test{
     Some(hit_record) => {
-      //Surface normal direction is from center of sphere to hit point
-      let surface_normal = Vec3::unit_vector(&(r.point_at(hit_record.t) - Vec3::new(0.0, 0.0, -1.0)));
-      //surface_normal has -1 <= x, y, z <= 1 so to get a colour just map
-      //  these values into [0 .. 1] by value -> (value + 1) / 2
-      0.5 * Color::new(surface_normal.x + 1.0, surface_normal.y + 1.0, surface_normal.z + 1.0)
+      //Part of the sphere, so compute colour based on the surface normal.
+      //The normal has -1 <= x, y, z <= 1 so to get a colour just map
+      //  these values into [0 .. 1] using the map value -> (value + 1) / 2
+      0.5 * Color::new(hit_record.normal.x + 1.0, hit_record.normal.y + 1.0, hit_record.normal.z + 1.0) //Refactor
     }
     None => {
       let unit_direction = Vec3::unit_vector(r.direction());
@@ -60,6 +64,11 @@ pub fn render(img_buf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>) {
       - viewport_v / 2.0;
   let pixel00_loc   //Pixels are inset by half the pixel-to-pixel distance 
     = viewport_upper_left + 0.5 * (pixel_deta_u + pixel_deta_v);  
+
+  //World: we must place hittable objects into the scene  
+  let mut world = HittableList::new_empty();
+  world.add(Rc::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)));
+  world.add(Rc::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)));
   
   //  Update the Pixels in the ImageBuffer with the RGB values we want    
   for (x, y, pixel) in img_buf.enumerate_pixels_mut() {
@@ -72,7 +81,7 @@ pub fn render(img_buf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>) {
       let r = Ray::new(camera_center, ray_direction);
 
       //All colour calculations are done using f64 values in [0.0 .. 1.0]
-      let pixel_color  = ray_color(&r);
+      let pixel_color  = ray_color(&r, &world);
 
       //Now we store the colour in the image buffer
       *pixel = Rgb(pixel_color.output_color());
