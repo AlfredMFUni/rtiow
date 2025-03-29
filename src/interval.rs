@@ -36,6 +36,16 @@ impl Interval {
         self.min < x && x < self.max
     }
 
+    pub fn clamp(self: &Self, x: f64) -> f64 {
+        if x < self.min {
+            self.min
+        } else if x > self.max {
+            self.max
+        } else {
+            x
+        }
+    }
+
     //Associated constants
     pub const EMPTY: Self = Self::new_empty(); 
     pub const UNIVERSE: Self = Self{

@@ -1,6 +1,7 @@
 use std::ops::{Add, Mul};
 
 use crate::vec3::Vec3;
+use crate::interval::Interval;
 
 //Use the newtype pattern to create Color as a thin wrapper around Vec3.
 //  We can control which of the public functions of Vec3 are accessible
@@ -34,13 +35,14 @@ impl Color {
     }
 
     //Associated functions
-    pub fn output_color(&self) -> [u8; 3] {
-        //Move from [0 .. 1] colour values to [0 .. 255] colour values. 
-        //  Note that casting from a float to an integer rounds towards 0 
-        //  so multiply by 255.999 to round up the floating point values 
-        //  before rounding them back down. 
-        [(self.r() * 255.999) as u8, (self.g() * 255.999) as u8, (self.b() * 255.999) as u8]
-    }
+    pub fn output_color(&self) -> [u8; 3] {    
+        //Move from 0 <= x < 1 colour values to 0 <= x < 256 colour values.  
+        [(Self::INTENSITY.clamp(self.r()) * 256.0) as u8, 
+            (Self::INTENSITY.clamp(self.g()) * 256.0) as u8, 
+            (Self::INTENSITY.clamp(self.b()) * 256.0) as u8
+        ]
+    }   
+    pub const INTENSITY: Interval = Interval {min: 0.0, max: 0.999};
     
 }
 
