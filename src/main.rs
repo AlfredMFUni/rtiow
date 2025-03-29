@@ -6,6 +6,7 @@ use rtiow::vec3::Vec3;
 // Handle configuration logic: 
 //  create an appropriately sized ImageBuffer;
 //  set up the world being imaged.
+//  set the number of ray samples per pixel
 // Call the library code to carry out the program logic (generating a ray traced image).
 // Handle errors.
 fn main() {
@@ -28,7 +29,7 @@ fn main() {
 
   // eprint!("Starting render\n");
 
-  rtiow::render(&mut image_buffer, &world); 
+  rtiow::render(&mut image_buffer, &world, 50); 
   
   // Write the ImageBuffer to a file
   //  We can ignore errors for now so just "unwrap" the Ok result.

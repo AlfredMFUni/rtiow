@@ -95,7 +95,12 @@ impl Camera {
         let mut rng = thread_rng();
         Vec3::new(rng.gen_range(-0.5..0.5), rng.gen_range(-0.5..0.5), 0f64)
     }
-      
+    
+    pub fn set_samples_per_pixel(self: &mut Self, rate: u32) {
+        self.samples_per_pixel = rate;
+        self.pixel_samples_scale = 1f64 / rate as f64;
+    }
+
     //Associated functions
     fn ray_color(r: &Ray, world: &HittableList) -> Color {
         let hit_test = world.hit(r, Interval::new(0.0, f64::INFINITY));
