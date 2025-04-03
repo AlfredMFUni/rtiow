@@ -99,11 +99,10 @@ impl Camera {
         let hit_test = world.hit(r, Interval::new(0.0, f64::INFINITY));
       
         match hit_test {
-            Some(hit_record) => {
-                //Part of a hittable, so compute colour based on the surface normal.
-                //The normal has -1 <= x, y, z <= 1 so to get a colour just map
-                //  these values into [0 .. 1] using the map value -> (value + 1) / 2
-                0.5 * Color::new(hit_record.normal.x + 1.0, hit_record.normal.y + 1.0, hit_record.normal.z + 1.0)
+            Some(hit_record) => {                
+                //Part of a hittable, so compute colour for a mid-grey diffuse material
+                let direction = Vec3::random_on_hemisphere(&hit_record.normal);
+                0.5 * Camera::ray_color(&Ray::new(hit_record.p, direction), world)
             }
             None => {
                 //Part of the background, so compute blue gradient

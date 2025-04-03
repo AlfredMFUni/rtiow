@@ -1,6 +1,7 @@
 pub mod color;
 
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
+use rand::{thread_rng, Rng};
 
 #[derive(Copy, Clone, PartialEq, Debug )]
 pub struct Vec3 {
@@ -23,6 +24,26 @@ impl Vec3{
         Vec3 { x: 0.0, y: 0.0, z: 0.0 }
     }
 
+    ///Create a new Vec3 with coordinates in the range 0..1
+    pub fn new_random() -> Vec3 {
+        let mut rng = thread_rng();
+        Vec3 {
+            x: rng.gen_range(0f64..1f64), 
+            y: rng.gen_range(0f64..1f64), 
+            z: rng.gen_range(0f64..1f64), 
+        }
+    }
+
+    ///Create a new Vec3 with coordinates in the range min..max 
+    pub fn new_random_in_range(min: f64, max: f64) -> Vec3 {
+        let mut rng = thread_rng();
+        Vec3 {
+            x: rng.gen_range(min..max), 
+            y: rng.gen_range(min..max), 
+            z: rng.gen_range(min..max), 
+        }
+    }
+
     //Methods 
     pub fn length_squared(self: &Self) -> f64 {
         self.x*self.x + self.y*self.y + self.z*self.z
@@ -30,6 +51,32 @@ impl Vec3{
 
     pub fn length(&self) -> f64 {
         self.length_squared().sqrt()
+    }
+    
+
+    pub fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            //Get a random vector inside the unit cube
+            let p = Vec3::new_random_in_range(-1.0, 1.0); 
+            //Return the first vector that is also inside the unit sphere
+            // rejecting vectors that are not. 
+            if p.length_squared() < 1.0 {
+                break p
+            }
+        }
+    }
+
+    pub fn random_unit_vector() -> Vec3 {
+        Vec3::unit_vector(&Vec3::random_in_unit_sphere())
+    }
+
+    pub fn random_on_hemisphere(normal :&Vec3) -> Vec3 {
+        let on_unit_sphere = Vec3::random_unit_vector();
+        if Vec3::dot(&on_unit_sphere, normal) > 0.0 {
+            on_unit_sphere
+        } else {
+            -on_unit_sphere
+        }
     }
 
     //Other associated functions 
