@@ -110,8 +110,8 @@ impl Camera {
         match hit_test {
             Some(hit_record) => {                
                 //Part of a hittable, so compute colour for a mid-grey diffuse material
-                let direction = hit_record.normal + Vec3::random_unit_vector();
-                0.5 * Camera::ray_color(&Ray::new(hit_record.p, direction), depth - 1, world)
+                let (attenuation, scattered) = hit_record.mat.scatter( r, &hit_record);
+                attenuation * Camera::ray_color(&scattered, depth - 1, world)
             }
             None => {
                 //Part of the background, so compute blue gradient

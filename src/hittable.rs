@@ -121,10 +121,10 @@ impl Hittable for HittableList {
             //If the ray hits the current Hittable object AND does so
             // closer to the ray origin, make this Hittable our closest_hit  
             let did_ray_hit = hittable.hit(r, Interval::new(ray_t.min, closest_so_far));
-            if let Some(hit) = did_ray_hit {
+            if let Some(hit) = &did_ray_hit {
                 //We have a closer hit, so record this
                 closest_so_far = hit.t;
-                closest_hit = Some(hit);
+                closest_hit = did_ray_hit;
             }
         }  
 

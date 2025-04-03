@@ -1,5 +1,4 @@
 use std::rc::Rc;
-use std::clone;
 
 use rtiow::hittable::{Sphere, HittableList};
 use rtiow::vec3::Vec3;
@@ -25,13 +24,14 @@ fn main() {
   //  see https://docs.rs/image/latest/image/type.RgbImage.html
   let mut image_buffer  = image::ImageBuffer::new(image_width, image_height);
 
-  //Create the Materials
-  let diffuse: Rc<dyn Material> = Rc::new(Lambertian{albedo: Color::new_zeroes()});
+  //Create the Materials  
+  let material_ground: Rc<dyn Material> = Rc::new(Lambertian{albedo: Color::new(0.8, 0.8, 0.0)});
+  let material_center: Rc<dyn Material> = Rc::new(Lambertian{albedo: Color::new(0.1, 0.2, 0.5)});
 
   //Create the World: we must place hittable objects into the scene  
   let mut world: HittableList = HittableList::new_empty();
-  world.add(Rc::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, diffuse.clone())));
-  world.add(Rc::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, diffuse.clone())));
+  world.add(Rc::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, material_center.clone())));
+  world.add(Rc::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, material_ground.clone())));
   
   // eprint!("Starting render\n");
   rtiow::render(&mut image_buffer, &world, 100, 50);

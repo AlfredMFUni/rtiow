@@ -79,6 +79,13 @@ impl Vec3{
         }
     }
 
+    pub fn near_zero(self: &Self) -> bool {
+        let near_zero = -1e-8..1e-8; 
+        near_zero.contains(&self.x) 
+            && near_zero.contains(&self.y)
+            && near_zero.contains(&self.z)   
+    }
+
     //Other associated functions 
     pub fn dot(u: &Vec3, v: &Vec3) -> f64 {
         u.x * v.x + u.y * v.y + u.z * v.z
