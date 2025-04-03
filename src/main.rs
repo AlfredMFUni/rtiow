@@ -5,8 +5,8 @@ use rtiow::vec3::Vec3;
 
 // Handle configuration logic: 
 //  create an appropriately sized ImageBuffer;
-//  set up the world being imaged.
-//  set the number of ray samples per pixel
+//  set up the world being imaged
+//  set the number of ray saamples per pixel
 // Call the library code to carry out the program logic (generating a ray traced image).
 // Handle errors.
 fn main() {
@@ -26,9 +26,8 @@ fn main() {
   let mut world: HittableList = HittableList::new_empty();
   world.add(Rc::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)));
   world.add(Rc::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)));
-
+  
   // eprint!("Starting render\n");
-
   rtiow::render(&mut image_buffer, &world, 50); 
   
   // Write the ImageBuffer to a file

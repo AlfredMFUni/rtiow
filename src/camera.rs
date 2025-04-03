@@ -12,9 +12,9 @@ pub struct Camera {
     pixel00_loc: Vec3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
-    //Sampling data							
-    samples_per_pixel: u32,   //default to 10 but allowed to change	
-    pixel_samples_scale: f64, // = 1/samples_per_pixel			
+    //Sampling data
+    samples_per_pixel: u32,   //default to 10 but allowed to change
+    pixel_samples_scale: f64, // = 1/samples_per_pixel 
 }
 
 impl Camera { 
@@ -52,8 +52,8 @@ impl Camera {
             pixel00_loc: pixel00_loc, 
             pixel_delta_u: pixel_delta_u, 
             pixel_delta_v: pixel_delta_v, 
-            samples_per_pixel: 10,		//Add
-            pixel_samples_scale: 0.1, 	//Add
+            samples_per_pixel: 10,
+            pixel_samples_scale: 0.1,
         }
     }
 
@@ -61,13 +61,15 @@ impl Camera {
     pub fn render(self: &mut Self, img_buf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, world: &HittableList) {
         //  Update the Pixels in the ImageBuffer with the RGB values we want    
         for (u, v, pixel) in img_buf.enumerate_pixels_mut() {
+            // eprint!("\rScanlines remaining: {}   ", height - y);
+
             //Calculate the pixel colour by random sampling in a square 
             //  around the pixel's viewport location and averaging the samples
             let mut pixel_color = Color::new_zeroes();
             for _sample in 0..=self.samples_per_pixel {
-              let r = self.get_ray(u as f64, v as f64);
-              //All colour calculations are done using f64 values in [0.0 .. 1.0]
-              pixel_color  = pixel_color + Camera::ray_color(&r, world); 
+                let r = self.get_ray(u as f64, v as f64);
+                //All colour calculations are done using f64 values in [0.0 .. 1.0]
+                pixel_color  = pixel_color + Camera::ray_color(&r, world); 
             }
             pixel_color = self.pixel_samples_scale * pixel_color;
 
@@ -75,27 +77,18 @@ impl Camera {
             *pixel = Rgb(pixel_color.output_color());
         }
     }
-
+     
     ///Construct a ray passing through a randomly chosen point in the 
     /// unit square around the given (u,v) location on the camera's viewport.
-    fn get_ray(self: &Self, u: f64, v: f64) -> Ray {
-        //Calculate the ray passing through the current pixel
-          let offset = Camera::sample_square();
-          let pixel_sample = self.pixel00_loc
-            + ((u + offset.x) * self.pixel_delta_u)
-            + ((v + offset.y) * self.pixel_delta_v);
-          let ray_direction = pixel_sample - self.center; 
-          Ray::new(self.center, ray_direction) 
+    fn get_ray(self: &Self, u: f64, v: f64) ->Ray {
+        let offset = Camera::sample_square();
+        let pixel_sample = self.pixel00_loc
+          + ((u + offset.x) * self.pixel_delta_u)
+          + ((v + offset.y) * self.pixel_delta_v);
+        let ray_direction = pixel_sample - self.center; 
+        Ray::new(self.center, ray_direction) 
     }
 
-    ///Returns a Vec3 through a random point in the unit square around (0,0).
-    /// 
-    /// Excludes points on the right and bottom edges of the square.
-    fn sample_square() -> Vec3 {
-        let mut rng = thread_rng();
-        Vec3::new(rng.gen_range(-0.5..0.5), rng.gen_range(-0.5..0.5), 0f64)
-    }
-    
     pub fn set_samples_per_pixel(self: &mut Self, rate: u32) {
         self.samples_per_pixel = rate;
         self.pixel_samples_scale = 1f64 / rate as f64;
@@ -106,19 +99,27 @@ impl Camera {
         let hit_test = world.hit(r, Interval::new(0.0, f64::INFINITY));
       
         match hit_test {
-          Some(hit_record) => {
-            //Part of a hittable, so compute colour based on the surface normal.
-            //The normal has -1 <= x, y, z <= 1 so to get a colour just map
-            //  these values into [0 .. 1] using the map value -> (value + 1) / 2
-            0.5 * Color::new(hit_record.normal.x + 1.0, hit_record.normal.y + 1.0, hit_record.normal.z + 1.0)
-          }
-          None => {
-            //Part of the background, so compute blue gradient
-            let unit_direction = Vec3::unit_vector(r.direction());
-            let a = 0.5 * (unit_direction.y + 1.0); 
-            (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)   
-          }
+            Some(hit_record) => {
+                //Part of a hittable, so compute colour based on the surface normal.
+                //The normal has -1 <= x, y, z <= 1 so to get a colour just map
+                //  these values into [0 .. 1] using the map value -> (value + 1) / 2
+                0.5 * Color::new(hit_record.normal.x + 1.0, hit_record.normal.y + 1.0, hit_record.normal.z + 1.0)
+            }
+            None => {
+                //Part of the background, so compute blue gradient
+                let unit_direction = Vec3::unit_vector(r.direction());
+                let a = 0.5 * (unit_direction.y + 1.0); 
+                (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)   
+            }
         }
-      }
-      
+    } 
+
+    ///Returns a Vec3 through a random point in the unit square around (0,0).
+    /// 
+    /// Excludes points on the right and bottom edges of the square.
+    fn sample_square() -> Vec3 {
+        let mut rng = thread_rng();
+        Vec3::new(rng.gen_range(-0.5..0.5), rng.gen_range(-0.5..0.5), 0f64)
+    }
+    
 }

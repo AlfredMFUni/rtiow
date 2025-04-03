@@ -1,9 +1,9 @@
 use std::vec::Vec;
 use std::rc::Rc;
 
+use crate::interval::Interval;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
-use crate::interval::Interval;
 
 #[derive(Clone, Copy, Debug)]
 pub struct HitRecord {
@@ -31,59 +31,6 @@ impl HitRecord {
 
 pub trait Hittable {
     fn hit(self: &Self, r: &Ray, ray_t: Interval) -> Option<HitRecord>;
-} 
-
-pub struct HittableList {
-    pub objects: Vec<Rc<dyn Hittable>>,
-}
-
-impl HittableList{
-        //Constructors
-        pub fn new_empty() -> Self {
-            HittableList{ objects: Vec::new(), }
-        }
-    
-        pub fn new_with_element(elem: Rc<dyn Hittable>) -> Self {
-            HittableList{ objects: vec![elem], }
-        }
-    
-        //methods
-        pub fn clear(self: &mut Self) {
-            self.objects.clear();
-        }
-    
-        pub fn add(self: &mut Self, elem: Rc<dyn Hittable>) {
-            //This method moves the Rc<dyn Hittable> value elem by
-            // taking ownership of it then transferring ownership
-            // to the self.objects vector 
-            self.objects.push(elem);
-        } 
-}
-
-impl Hittable for HittableList {
-    fn hit(self: &Self, r: &Ray, ray_t: Interval) -> Option<HitRecord> {
-        //Work through the list to see if any object is hit. 
-        //Return the one closest to the ray's origin. 
-        let mut closest_so_far = ray_t.max; 
-        let mut closest_hit: Option<HitRecord> = None;
-
-        //Must use &self.objects to borrow the Hittables as we don't want to move 
-        // them out of self.objects
-        for hittable in &self.objects {
-            //If the ray hits the current Hittable object AND does so
-            // closer to the ray origin, make this Hittable our closest_hit  
-            let did_ray_hit = hittable.hit(r, Interval::new(ray_t.min, closest_so_far));
-            if let Some(hit) = did_ray_hit {
-                //We have a closer hit, so record this
-                closest_so_far = hit.t;
-                closest_hit = did_ray_hit;
-            }
-        }  
-
-        //Finally, return a reference to the closest hittable object that the
-        // ray hit, or None if the ray missed them all
-        closest_hit
-    }
 } 
 
 #[derive(Clone, Copy, Debug)]
@@ -115,9 +62,9 @@ impl Hittable for Sphere {
 
         //Find the nearest root within the acceptable range 
         let mut root = (h - sqrtd) / a; 
-        if root <= ray_t.min || ray_t.max <= root {
+        if !ray_t.surrounds(root) {
             root = (h + sqrtd) / a; 
-            if root <= ray_t.min || ray_t.max <= root {
+            if !ray_t.surrounds(root) {
                 return None;
             }
         }
@@ -129,4 +76,57 @@ impl Hittable for Sphere {
         return Some(hit_record);
     }
     
+}
+
+pub struct HittableList {
+    pub objects: Vec<Rc<dyn Hittable>>,
+}
+
+impl HittableList {
+    //Constructors
+    pub fn new_empty() -> Self {
+        HittableList{ objects: Vec::new(), }
+    }
+
+    pub fn new_with_element(elem: Rc<dyn Hittable>) -> Self {
+        HittableList{ objects: vec![elem], }
+    }
+
+    //methods
+    pub fn clear(self: &mut Self) {
+        self.objects.clear();
+    }
+
+    pub fn add(self: &mut Self, elem: Rc<dyn Hittable>) {
+        //This method moves the Rc<dyn Hittable> value elem by
+        // taking ownership of it then transferring ownership
+        // to the self.objects vector 
+        self.objects.push(elem);
+    } 
+}
+
+impl Hittable for HittableList {
+    fn hit(self: &Self, r: &Ray, ray_t: Interval) -> Option<HitRecord> {
+        //Work through the list to see if any object is hit. 
+        //Return the one closest to the ray's origin. 
+        let mut closest_so_far = ray_t.max; 
+        let mut closest_hit: Option<HitRecord> = None;
+
+        //Must use &self.objects to borrow the Hittables as we don't want to move 
+        // them out of self.objects
+        for hittable in &self.objects {
+            //If the ray hits the current Hittable object AND does so
+            // closer to the ray origin, make this Hittable our closest_hit  
+            let did_ray_hit = hittable.hit(r, Interval::new(ray_t.min, closest_so_far));
+            if let Some(hit) = did_ray_hit {
+                //We have a closer hit, so record this
+                closest_so_far = hit.t;
+                closest_hit = did_ray_hit;
+            }
+        }  
+
+        //Finally, return a reference to the closest hittable object that the
+        // ray hit, or None if the ray missed them all
+        closest_hit
+    }
 }
