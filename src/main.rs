@@ -28,7 +28,7 @@ fn main() {
   world.add(Rc::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)));
   
   // eprint!("Starting render\n");
-  rtiow::render(&mut image_buffer, &world, 50); 
+  rtiow::render(&mut image_buffer, &world, 100, 50);
   
   // Write the ImageBuffer to a file
   //  We can ignore errors for now so just "unwrap" the Ok result.

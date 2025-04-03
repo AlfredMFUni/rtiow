@@ -15,6 +15,7 @@ pub struct Camera {
     //Sampling data
     samples_per_pixel: u32,   //default to 10 but allowed to change
     pixel_samples_scale: f64, // = 1/samples_per_pixel 
+    max_depth: u32,
 }
 
 impl Camera { 
@@ -54,6 +55,7 @@ impl Camera {
             pixel_delta_v: pixel_delta_v, 
             samples_per_pixel: 10,
             pixel_samples_scale: 0.1,
+            max_depth: 10,
         }
     }
 
@@ -69,7 +71,7 @@ impl Camera {
             for _sample in 0..=self.samples_per_pixel {
                 let r = self.get_ray(u as f64, v as f64);
                 //All colour calculations are done using f64 values in [0.0 .. 1.0]
-                pixel_color  = pixel_color + Camera::ray_color(&r, world); 
+                pixel_color  = pixel_color + Camera::ray_color(&r, self.max_depth, world); 
             }
             pixel_color = self.pixel_samples_scale * pixel_color;
 
@@ -94,15 +96,22 @@ impl Camera {
         self.pixel_samples_scale = 1f64 / rate as f64;
     }
 
-    //Associated functions
-    fn ray_color(r: &Ray, world: &HittableList) -> Color {
+    pub fn set_max_depth(self: &mut Self, depth: u32) {
+        self.max_depth = depth;
+    }
+
+    //Associated functions    
+    fn ray_color(r: &Ray, depth:u32, world: &HittableList) -> Color {
+        if depth <=0 {
+            return Color::new_zeroes();
+        }
         let hit_test = world.hit(r, Interval::new(0.0, f64::INFINITY));
       
         match hit_test {
             Some(hit_record) => {                
                 //Part of a hittable, so compute colour for a mid-grey diffuse material
                 let direction = Vec3::random_on_hemisphere(&hit_record.normal);
-                0.5 * Camera::ray_color(&Ray::new(hit_record.p, direction), world)
+                0.5 * Camera::ray_color(&Ray::new(hit_record.p, direction), depth - 1, world)
             }
             None => {
                 //Part of the background, so compute blue gradient
