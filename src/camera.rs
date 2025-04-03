@@ -105,12 +105,12 @@ impl Camera {
         if depth <=0 {
             return Color::new_zeroes();
         }
-        let hit_test = world.hit(r, Interval::new(0.0, f64::INFINITY));
+        let hit_test = world.hit(r, Interval::new(0.001, f64::INFINITY));
       
         match hit_test {
             Some(hit_record) => {                
                 //Part of a hittable, so compute colour for a mid-grey diffuse material
-                let direction = Vec3::random_on_hemisphere(&hit_record.normal);
+                let direction = hit_record.normal + Vec3::random_unit_vector();
                 0.5 * Camera::ray_color(&Ray::new(hit_record.p, direction), depth - 1, world)
             }
             None => {
