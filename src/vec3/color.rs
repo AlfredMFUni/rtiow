@@ -7,6 +7,7 @@ use crate::interval::Interval;
 //  We can control which of the public functions of Vec3 are accessible
 //  when using it as a Color. 
 //  We can also add new, Color only public functions. 
+#[derive(Clone, Copy, Debug)]
 pub struct Color(Vec3);
 
 impl Color {
@@ -34,18 +35,24 @@ impl Color {
     //
     pub fn output_color(&self) -> [u8; 3] {    
         //Move from [0 .. 1] colour values to [0 .. 255] colour values. 
-        //  Note that casting from a float to an integer rounds towards 0 
-        //  so multiply by 255.999 to round up the floating point values 
-        //  before rounding them back down. 
-        [(Self::INTENSITY.clamp(self.r()) * 256.0) as u8, 
-            (Self::INTENSITY.clamp(self.g()) * 256.0) as u8, 
-            (Self::INTENSITY.clamp(self.b()) * 256.0) as u8
+        [(Self::INTENSITY.clamp(Self::linear_to_gamma(self.r())) * 256.0) as u8, 
+            (Self::INTENSITY.clamp(Self::linear_to_gamma(self.g())) * 256.0) as u8, 
+            (Self::INTENSITY.clamp(Self::linear_to_gamma(self.b())) * 256.0) as u8
         ]
     }
 
     //Associated constants
     pub const INTENSITY: Interval = Interval {min: 0.0, max: 0.999};
-    
+
+    //Associated functions
+    fn linear_to_gamma(linear_component: f64) -> f64 {
+        if linear_component > 0.0 {
+            linear_component.sqrt()
+        } else {
+            0f64
+        }
+    }
+
 }
 
 impl Mul<Color> for f64 {

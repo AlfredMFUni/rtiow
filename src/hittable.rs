@@ -4,18 +4,20 @@ use std::rc::Rc;
 use crate::interval::Interval;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
+use crate::material::Material;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]	
 pub struct HitRecord {
     pub p: Vec3,
     pub normal: Vec3,
+    pub mat: Rc<dyn Material>,	
     pub t: f64,
     pub front_face: bool,
-}
+} 
 
 impl HitRecord {
-    pub fn new(p: Vec3, normal: Vec3, t: f64, front_face: bool) -> Self {
-        HitRecord{p, normal, t, front_face}
+    pub fn new(p: Vec3, normal: Vec3, mat: Rc<dyn Material>, t: f64, front_face: bool) -> Self {
+        HitRecord{p, normal, mat, t, front_face}
     }
 
     ///Set the hit record normal vector and direction it faces. 
@@ -33,17 +35,18 @@ pub trait Hittable {
     fn hit(self: &Self, r: &Ray, ray_t: Interval) -> Option<HitRecord>;
 } 
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct Sphere {
     center: Vec3,
     radius: f64,
+    mat: Rc<dyn Material>,
 }
 
 impl Sphere {
     //  Constructors
-    pub fn new (center: Vec3, radius: f64) -> Sphere {
-        Sphere {center, radius} //Using the Field Init Shorthand 
-    }
+    pub fn new (center: Vec3, radius: f64, mat: Rc<dyn Material>) -> Sphere {
+        Sphere {center, radius, mat} 	
+    } 
 }
 
 impl Hittable for Sphere {
@@ -69,7 +72,7 @@ impl Hittable for Sphere {
             }
         }
 
-        let mut hit_record = HitRecord::new(r.point_at(root), Vec3::new_zeroes(), root, false);
+        let mut hit_record = HitRecord::new(r.point_at(root), Vec3::new_zeroes(), self.mat.clone(), root, false);
         let outward_normal = (r.point_at(root) - self.center) / self.radius;
         hit_record.set_face_normal(r, outward_normal);
 
@@ -121,7 +124,7 @@ impl Hittable for HittableList {
             if let Some(hit) = did_ray_hit {
                 //We have a closer hit, so record this
                 closest_so_far = hit.t;
-                closest_hit = did_ray_hit;
+                closest_hit = Some(hit);
             }
         }  
 

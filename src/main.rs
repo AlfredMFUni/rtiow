@@ -1,7 +1,10 @@
 use std::rc::Rc;
+use std::clone;
 
 use rtiow::hittable::{Sphere, HittableList};
 use rtiow::vec3::Vec3;
+use rtiow::material::{Lambertian, Material};
+use rtiow::vec3::color::Color;
 
 // Handle configuration logic: 
 //  create an appropriately sized ImageBuffer;
@@ -22,10 +25,13 @@ fn main() {
   //  see https://docs.rs/image/latest/image/type.RgbImage.html
   let mut image_buffer  = image::ImageBuffer::new(image_width, image_height);
 
+  //Create the Materials
+  let diffuse: Rc<dyn Material> = Rc::new(Lambertian{albedo: Color::new_zeroes()});
+
   //Create the World: we must place hittable objects into the scene  
   let mut world: HittableList = HittableList::new_empty();
-  world.add(Rc::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)));
-  world.add(Rc::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)));
+  world.add(Rc::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, diffuse.clone())));
+  world.add(Rc::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, diffuse.clone())));
   
   // eprint!("Starting render\n");
   rtiow::render(&mut image_buffer, &world, 100, 50);
