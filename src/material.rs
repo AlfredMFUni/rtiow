@@ -37,3 +37,22 @@ impl Material for Lambertian {
         (self.albedo, scattered)   
     }
 }
+
+#[derive(Clone, Copy, Debug)]
+pub struct Metal {
+    pub albedo: Color,
+}
+
+impl Metal {
+    pub fn new(albedo: Color) -> Self {
+        Metal { albedo } 
+    }
+}
+
+impl Material for Metal {
+    ///Metal material reflect the incoming rays about the hit point normal
+    fn scatter(self: &Self, r_in: &Ray, hit_record: &HitRecord) -> (Color, Ray) {
+        let reflected = Vec3::reflect(r_in.direction(), &hit_record.normal);
+        (self.albedo, Ray::new(hit_record.p, reflected))
+    }
+} 

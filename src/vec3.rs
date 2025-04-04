@@ -65,9 +65,10 @@ impl Vec3{
             }
         }
     }
-
+    
     pub fn random_unit_vector() -> Vec3 {
         Vec3::unit_vector(&Vec3::random_in_unit_sphere())
+        //Vec3::unit_vector(&Vec3::new_random_in_range(-1.0, 1.0))
     }
 
     pub fn random_on_hemisphere(normal :&Vec3) -> Vec3 {
@@ -98,6 +99,13 @@ impl Vec3{
             y: u.z*v.x - u.x*v.z,
             z: u.x*v.y - u.y*v.x,
         }
+    }
+
+    pub fn reflect(vector: &Vec3, normal: &Vec3) -> Vec3 {
+        //We need to dereference the &Vec3 to do vector arithmetic
+        // Vec3 values are copied, so original owners retain ownership 
+        // of their Vec3 values 
+        *vector - 2.0 * Vec3::dot(vector, normal) * *normal
     }
 
     pub fn unit_vector(u: &Vec3) -> Vec3 {

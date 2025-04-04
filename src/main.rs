@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use rtiow::hittable::{Sphere, HittableList};
 use rtiow::vec3::Vec3;
-use rtiow::material::{Lambertian, Material};
+use rtiow::material::{Lambertian, Material, Metal};
 use rtiow::vec3::color::Color;
 
 // Handle configuration logic: 
@@ -27,11 +27,15 @@ fn main() {
   //Create the Materials  
   let material_ground: Rc<dyn Material> = Rc::new(Lambertian{albedo: Color::new(0.8, 0.8, 0.0)});
   let material_center: Rc<dyn Material> = Rc::new(Lambertian{albedo: Color::new(0.1, 0.2, 0.5)});
+  let material_left: Rc<dyn Material> = Rc::new(Metal{albedo: Color::new(0.8, 0.8, 0.8)});
+  let material_right: Rc<dyn Material> = Rc::new(Metal{albedo: Color::new(0.8, 0.6, 0.2)});
 
   //Create the World: we must place hittable objects into the scene  
   let mut world: HittableList = HittableList::new_empty();
   world.add(Rc::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, material_center.clone())));
   world.add(Rc::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, material_ground.clone())));
+  world.add(Rc::new(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, material_left.clone())));
+  world.add(Rc::new(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, material_right.clone())));
   
   // eprint!("Starting render\n");
   rtiow::render(&mut image_buffer, &world, 100, 50);
