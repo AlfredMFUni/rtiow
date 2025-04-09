@@ -78,7 +78,15 @@ pub struct Dielectric {
 
 impl Dielectric {
     pub fn new(refraction_index: f64) -> Self {
-        Self { refraction_index} 
+        Self { refraction_index, } 
+    }
+
+    //Calculate reflectance using Schlick's approximation
+    fn reflectance(cosine: f64, refraction_index: f64) -> f64 {
+        let r0 = (1.0 - refraction_index) / (1.0 + refraction_index);
+        let r0 = r0 * r0;
+
+        r0 + (1.0 - r0) * (1.0 - cosine).powf(5.0) 
     }
 }
 
@@ -93,8 +101,20 @@ impl Material for Dielectric {
             self.refraction_index
         };
         let unit_direction = Vec3::unit_vector(r_in.direction());
-        let refracted = Vec3::refract(&unit_direction, &hit_record.normal, ri);
+        //Check for total internal reflection
+        let cos_theta = (-Vec3::dot(&unit_direction, &hit_record.normal)).min(1.0);
+        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+        let cannot_refract = ri * sin_theta > 1.0; 
 
-        Some((Color::new(1.0, 1.0, 1.0), Ray::new(hit_record.p, refracted)))
+        //Randomly reflect rays 
+        let randomly_reflected = Dielectric::reflectance(cos_theta, ri) > rand::random::<f64>();
+
+        let direction = if cannot_refract || randomly_reflected {
+            Vec3::reflect(&unit_direction, &hit_record.normal)
+        } else {
+            Vec3::refract(&unit_direction, &hit_record.normal, ri)
+        };
+
+        Some((Color::new(1.0, 1.0, 1.0), Ray::new(hit_record.p, direction)))
     }
 } 

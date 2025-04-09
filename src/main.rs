@@ -29,7 +29,7 @@ fn main() {
   // would incorrectly infer a type of Rc<Lambertian>, Rc<Metal>, etc. 
   let material_ground: Rc<dyn Material>  = Rc::new(Lambertian{albedo: Color::new(0.8, 0.8, 0.0)});
   let material_center: Rc<dyn Material> = Rc::new(Lambertian{albedo: Color::new(0.1, 0.2, 0.5)});
-  let material_left: Rc<dyn Material> = Rc::new(Dielectric{refraction_index: 1.5});
+  let material_left: Rc<dyn Material> = Rc::new(Dielectric{refraction_index: 1.0 / 1.33});
   let material_right: Rc<dyn Material> = Rc::new(Metal{albedo: Color::new(0.8, 0.6, 0.2), fuzz: 0.1});
 
   //Create the World: we must place hittable objects into the scene  
