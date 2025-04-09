@@ -70,3 +70,31 @@ impl Material for Metal {
         }        
     }
 }
+
+#[derive(Clone, Copy, Debug)]
+pub struct Dielectric {
+    pub refraction_index: f64, 
+} 
+
+impl Dielectric {
+    pub fn new(refraction_index: f64) -> Self {
+        Self { refraction_index} 
+    }
+}
+
+impl Material for Dielectric {
+    //The sphere will always refraact, so will look odd
+    fn scatter(self: &Self, r_in: &Ray, hit_record: &HitRecord) -> Option<(Color, Ray)> {
+        //Refractive index is different depending on whether the 
+        // ray is entering or exiting the material 
+        let ri = if hit_record.front_face {
+            1.0 / self.refraction_index
+        } else {
+            self.refraction_index
+        };
+        let unit_direction = Vec3::unit_vector(r_in.direction());
+        let refracted = Vec3::refract(&unit_direction, &hit_record.normal, ri);
+
+        Some((Color::new(1.0, 1.0, 1.0), Ray::new(hit_record.p, refracted)))
+    }
+} 

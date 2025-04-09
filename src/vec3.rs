@@ -110,6 +110,15 @@ impl Vec3{
         // of their Vec3 values 
         *vector - 2.0 * Vec3::dot(vector, normal) * *normal
     }
+    
+    pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
+        let cos_theta = (-Vec3::dot(uv, n)).min(1.0);
+        let r_out_perp: Vec3 = etai_over_etat * (*uv + cos_theta * *n);
+        let r_out_para: Vec3 = -(1.0 - r_out_perp.length_squared()).sqrt() * *n;
+
+        r_out_perp + r_out_para
+    }
+
 }
 
 //Note that vector addition is implemented as a method.  
