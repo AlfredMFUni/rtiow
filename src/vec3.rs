@@ -1,6 +1,7 @@
 pub mod color;
 
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
+
 use rand::{thread_rng, Rng};
 
 #[derive(Copy, Clone, PartialEq, Debug )]
@@ -22,7 +23,7 @@ impl Vec3{
 
     pub fn new_zeroes() -> Vec3 {
         Vec3 { x: 0.0, y: 0.0, z: 0.0 }
-    }
+    } 
 
     ///Create a new Vec3 with coordinates in the range 0..1
     pub fn new_random() -> Vec3 {
@@ -52,33 +53,6 @@ impl Vec3{
     pub fn length(&self) -> f64 {
         self.length_squared().sqrt()
     }
-    
-
-    pub fn random_in_unit_sphere() -> Vec3 {
-        loop {
-            //Get a random vector inside the unit cube
-            let p = Vec3::new_random_in_range(-1.0, 1.0); 
-            //Return the first vector that is also inside the unit sphere
-            // rejecting vectors that are not. 
-            if p.length_squared() < 1.0 {
-                break p
-            }
-        }
-    }
-    
-    pub fn random_unit_vector() -> Vec3 {
-        Vec3::unit_vector(&Vec3::random_in_unit_sphere())
-        //Vec3::unit_vector(&Vec3::new_random_in_range(-1.0, 1.0))
-    }
-
-    pub fn random_on_hemisphere(normal :&Vec3) -> Vec3 {
-        let on_unit_sphere = Vec3::random_unit_vector();
-        if Vec3::dot(&on_unit_sphere, normal) > 0.0 {
-            on_unit_sphere
-        } else {
-            -on_unit_sphere
-        }
-    }
 
     pub fn near_zero(self: &Self) -> bool {
         let near_zero = -1e-8..1e-8; 
@@ -93,11 +67,40 @@ impl Vec3{
     }
 
     pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 { 
-        //Vec3::new_zeroes()
         Vec3 {
             x: u.y*v.z - u.z*v.y,
             y: u.z*v.x - u.x*v.z,
             z: u.x*v.y - u.y*v.x,
+        }
+    }
+
+    pub fn unit_vector(u: &Vec3) -> Vec3 {
+        let inv_length = 1.0 / u.length();
+        Vec3::new(u.x * inv_length, u.y * inv_length, u.z * inv_length)
+    }
+
+    pub fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            //Get a random vector inside the unit cube
+            let p = Vec3::new_random_in_range(-1.0, 1.0); 
+            //Return the first vector that is also inside the unit sphere
+            // rejecting vectors that are not. 
+            if p.length_squared() < 1.0 {
+                break p
+            }
+        }
+    }
+
+    pub fn random_unit_vector() -> Vec3 {
+        Vec3::unit_vector(&Vec3::random_in_unit_sphere())
+    }
+
+    pub fn random_on_hemisphere(normal :&Vec3) -> Vec3 {
+        let on_unit_sphere = Vec3::random_unit_vector();
+        if Vec3::dot(&on_unit_sphere, normal) > 0.0 {
+            on_unit_sphere
+        } else {
+            -on_unit_sphere
         }
     }
 
@@ -106,11 +109,6 @@ impl Vec3{
         // Vec3 values are copied, so original owners retain ownership 
         // of their Vec3 values 
         *vector - 2.0 * Vec3::dot(vector, normal) * *normal
-    }
-
-    pub fn unit_vector(u: &Vec3) -> Vec3 {
-        let inv_length = 1.0 / u.length();
-        Vec3::new(u.x * inv_length, u.y * inv_length, u.z * inv_length)
     }
 }
 
@@ -356,4 +354,32 @@ mod test {
    //SOME TESTS OMITTED
    //   The above tests cover a range of unit testing techniques. 
    //   The remaining operators can be tested similarly.  
+
+   #[test] 
+   fn near_zero_catches_single_coordinates_near_zero() {
+    //Arrange 
+    let v1 = Vec3::new_random_in_range(-1e-8 + 1e-9, 1e-8); 
+    let expected = true;
+
+    //Act
+    let result = v1.near_zero();
+
+    //Assert 
+    assert_eq!(expected, result);
+   }
+
+   #[test]
+   
+   fn near_zero_works_with_range_boundaries() {
+    //Arrange 
+    let v1 = Vec3::new(-1e8, -1e8, -1e8);
+    let v2 = Vec3::new(1e8, 1e8, 1e8);
+    let expected = false;
+
+    //Act
+    let result = v1.near_zero() || v2.near_zero();
+
+    //Assert 
+    assert_eq!(expected, result);
+   }
 }

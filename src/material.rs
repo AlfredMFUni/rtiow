@@ -1,13 +1,15 @@
 use std::fmt::Debug;
 
-use crate::hittable::HitRecord; 
-use crate::ray::Ray; 
+use crate::hittable::HitRecord;
+use crate::ray::Ray;
 use crate::vec3::{Vec3, color::Color};
 
-pub trait Material: Debug {	//We require that ANY struct implementing our Material trait must also implement Debug
-    fn scatter(self: &Self, r_in: &Ray, hit_record: &HitRecord) -> (Color, Ray);
-}
 
+pub trait Material: Debug {
+    fn scatter(self: &Self, _r_in: &Ray, _hit_record: &HitRecord) -> Option<(Color, Ray)> {
+        None
+    }
+}
 #[derive(Clone, Copy, Debug)]
 pub struct Lambertian {
     pub albedo: Color,
@@ -22,10 +24,10 @@ impl Lambertian {
 impl Material for Lambertian {
     ///Lambertian materials scatter incoming rays randomly about the outward 
     /// facing normal of the incoming ray's hit point.
+    /// 
     
-    // The incoming ray is not actually needed for this material, but is for others.
-    //Prefix the parameter with an '_' to turn of warnings 
-    fn scatter(self: &Self, _r_in: &Ray, hit_record: &HitRecord) -> (Color, Ray) { 
+    // The incoming ray is not actually needed for this material, but is for others. 
+    fn scatter(self: &Self, _r_in: &Ray, hit_record: &HitRecord) -> Option<(Color, Ray)> { 
         let scatter_direction = hit_record.normal + Vec3::random_unit_vector();
         let scatter_direction
             = if scatter_direction.near_zero() { 
@@ -34,25 +36,37 @@ impl Material for Lambertian {
                 scatter_direction
             };
         let scattered = Ray::new(hit_record.p, scatter_direction);
-        (self.albedo, scattered)   
+        Some((self.albedo, scattered))   
     }
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct Metal {
     pub albedo: Color,
+    pub fuzz: f64,
 }
 
 impl Metal {
-    pub fn new(albedo: Color) -> Self {
-        Metal { albedo } 
+    pub fn new(albedo: Color, fuzz: f64) -> Self {
+        let fuzz_factor = if fuzz < 1.0 {fuzz} else {1.0};
+        Metal { 
+            albedo,
+            fuzz: fuzz_factor,
+         } 
     }
 }
 
 impl Material for Metal {
-    ///Metal material reflect the incoming rays about the hit point normal
-    fn scatter(self: &Self, r_in: &Ray, hit_record: &HitRecord) -> (Color, Ray) {
+    ///Metal materials reflect the incoming rays about the hit point normal
+    fn scatter(self: &Self, r_in: &Ray, hit_record: &HitRecord) -> Option<(Color, Ray)> {
         let reflected = Vec3::reflect(r_in.direction(), &hit_record.normal);
-        (self.albedo, Ray::new(hit_record.p, reflected))
+        let reflected = Vec3::unit_vector(&reflected) + (self.fuzz * Vec3::random_unit_vector());
+        let fuzzed_reflection = Ray::new(hit_record.p, reflected);
+        if Vec3::dot(&fuzzed_reflection.direction(), &hit_record.normal) > 0.0 {
+            Some((self.albedo, fuzzed_reflection))
+        } else {
+            //Fuzzed reflected ray points into the object
+            None
+        }        
     }
-} 
+}

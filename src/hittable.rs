@@ -6,14 +6,14 @@ use crate::vec3::Vec3;
 use crate::ray::Ray;
 use crate::material::Material;
 
-#[derive(Clone, Debug)]	
+#[derive(Clone, Debug)]
 pub struct HitRecord {
     pub p: Vec3,
     pub normal: Vec3,
-    pub mat: Rc<dyn Material>,	
+    pub mat: Rc<dyn Material>,
     pub t: f64,
     pub front_face: bool,
-} 
+}
 
 impl HitRecord {
     pub fn new(p: Vec3, normal: Vec3, mat: Rc<dyn Material>, t: f64, front_face: bool) -> Self {
@@ -45,8 +45,8 @@ pub struct Sphere {
 impl Sphere {
     //  Constructors
     pub fn new (center: Vec3, radius: f64, mat: Rc<dyn Material>) -> Sphere {
-        Sphere {center, radius, mat} 	
-    } 
+        Sphere {center, radius, mat} //Using the Field Init Shorthand 
+    }
 }
 
 impl Hittable for Sphere {
@@ -128,7 +128,7 @@ impl Hittable for HittableList {
             }
         }  
 
-        //Finally, return a reference to the closest hittable object that the
+        //Finally, return the hit record for the closest hittable object that the
         // ray hit, or None if the ray missed them all
         closest_hit
     }

@@ -10,7 +10,8 @@ use crate::interval::Interval;
 #[derive(Clone, Copy, Debug)]
 pub struct Color(Vec3);
 
-impl Color {
+impl Color { 
+    //Constructors
     pub fn new(x : f64, y: f64, z: f64) -> Color {
         Color (Vec3::new(x, y, z))
     } 
@@ -19,6 +20,7 @@ impl Color {
         Color(Vec3::new_zeroes())
     }
 
+    //Methods
     //This time, implement the getter methods 
     pub fn r (&self) -> f64 {
         self.0.x
@@ -32,7 +34,7 @@ impl Color {
         self.0.z
     }
 
-    //
+    //Associated functions
     pub fn output_color(&self) -> [u8; 3] {    
         //Move from [0 .. 1] colour values to [0 .. 255] colour values. 
         [(Self::INTENSITY.clamp(Self::linear_to_gamma(self.r())) * 256.0) as u8, 
@@ -41,10 +43,6 @@ impl Color {
         ]
     }
 
-    //Associated constants
-    pub const INTENSITY: Interval = Interval {min: 0.0, max: 0.999};
-
-    //Associated functions
     fn linear_to_gamma(linear_component: f64) -> f64 {
         if linear_component > 0.0 {
             linear_component.sqrt()
@@ -53,6 +51,9 @@ impl Color {
         }
     }
 
+    //Associated constants
+    pub const INTENSITY: Interval = Interval {min: 0.0, max: 0.999};
+    
 }
 
 impl Mul<Color> for f64 {
@@ -63,14 +64,6 @@ impl Mul<Color> for f64 {
     }
 }
 
-impl Mul for Color {
-    type Output = Self;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        Color (self.0 * rhs.0)
-    }
-}
-
 impl Add for Color {
     type Output = Self;
 
@@ -78,6 +71,14 @@ impl Add for Color {
         Color (self.0 + rhs.0)
     }
 }
+
+impl Mul for Color {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Color (self.0 * rhs.0)
+    }
+} 
 
 
 #[cfg(test)]

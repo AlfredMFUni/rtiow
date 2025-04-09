@@ -13,9 +13,9 @@ pub struct Camera {
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
     //Sampling data
-    samples_per_pixel: u32,   //default to 10 but allowed to change
-    pixel_samples_scale: f64, // = 1/samples_per_pixel 
-    max_depth: u32,
+    samples_per_pixel: u32,     // default to 10
+    pixel_samples_scale: f64,   // = 1/samples_per_pixel 
+    max_depth: u32,             // maximum number of ray bounces; default to 10
 }
 
 impl Camera { 
@@ -54,8 +54,8 @@ impl Camera {
             pixel_delta_u: pixel_delta_u, 
             pixel_delta_v: pixel_delta_v, 
             samples_per_pixel: 10,
-            pixel_samples_scale: 0.1,
-            max_depth: 10,
+            pixel_samples_scale: 0.1, 
+            max_depth: 10
         }
     }
 
@@ -68,7 +68,7 @@ impl Camera {
             //Calculate the pixel colour by random sampling in a square 
             //  around the pixel's viewport location and averaging the samples
             let mut pixel_color = Color::new_zeroes();
-            for _sample in 0..=self.samples_per_pixel {
+            for _sample in 0..self.samples_per_pixel {
                 let r = self.get_ray(u as f64, v as f64);
                 //All colour calculations are done using f64 values in [0.0 .. 1.0]
                 pixel_color  = pixel_color + Camera::ray_color(&r, self.max_depth, world); 
@@ -100,18 +100,24 @@ impl Camera {
         self.max_depth = depth;
     }
 
-    //Associated functions    
+    //Associated functions
     fn ray_color(r: &Ray, depth:u32, world: &HittableList) -> Color {
         if depth <=0 {
             return Color::new_zeroes();
         }
+        
         let hit_test = world.hit(r, Interval::new(0.001, f64::INFINITY));
       
         match hit_test {
-            Some(hit_record) => {                
+            Some(hit_record) => {
                 //Part of a hittable, so compute colour for a mid-grey diffuse material
-                let (attenuation, scattered) = hit_record.mat.scatter( r, &hit_record);
-                attenuation * Camera::ray_color(&scattered, depth - 1, world)
+                if let Some((attenuation, scattered)) = hit_record.mat.scatter( r, &hit_record) {
+                    attenuation * Camera::ray_color(&scattered, depth - 1, world)
+                } else {
+                    //No ray returned from scatter, probably because it was 
+                    // absorbed by the material, so no more ray bounces   
+                    Color::new_zeroes()
+                }
             }
             None => {
                 //Part of the background, so compute blue gradient
@@ -122,7 +128,8 @@ impl Camera {
         }
     } 
 
-    ///Returns a Vec3 through a random point in the unit square around (0,0).
+    ///Returns a Vec3 through a random point in the unit square which lies in the xy-plane 
+    /// and is centered on the origin.
     /// 
     /// Excludes points on the right and bottom edges of the square.
     fn sample_square() -> Vec3 {
